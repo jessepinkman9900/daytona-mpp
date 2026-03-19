@@ -7,7 +7,7 @@
  * - Wildcard suffix: "/sandbox/*" matches "/sandbox/abc/start"
  */
 
-import { FLAT_FEES, DEFAULT_FEES } from "./rates";
+import { FLAT_FEES, DEFAULT_FEES, type Fee } from "./rates";
 
 /**
  * Check if a request path matches a route pattern.
@@ -38,8 +38,7 @@ const PARSED_FEES = Object.entries(FLAT_FEES).map(([key, fee]) => {
   return {
     method: key.slice(0, spaceIdx),
     pattern: key.slice(spaceIdx + 1),
-    amount: fee.amount,
-    description: fee.description,
+    ...fee,
   };
 });
 
@@ -51,7 +50,7 @@ const PARSED_FEES = Object.entries(FLAT_FEES).map(([key, fee]) => {
 export function findFee(
   method: string,
   path: string,
-): { amount: string; description: string } | null {
+): Fee | null {
   const m = method.toUpperCase();
 
   // Try specific route match first
@@ -66,17 +65,18 @@ export function findFee(
 
 /**
  * Apply platform surcharge to a fee.
- * Returns a new amount and description with the surcharge noted.
+ * Returns a new fee with the surcharge applied to the amount.
  */
 export function applySurcharge(
-  fee: { amount: string; description: string },
+  fee: Fee,
   surcharge: number,
-): { amount: string; description: string } {
+): Fee {
   if (!surcharge || surcharge <= 0) return fee;
 
   const base = parseFloat(fee.amount);
   const total = base * (1 + surcharge);
   return {
+    ...fee,
     amount: total.toFixed(6),
     description: `${fee.description} (+${(surcharge * 100).toFixed(0)}% platform fee)`,
   };

@@ -71,8 +71,8 @@ app.use("*", async (c, next) => {
   }
 
   const surcharge = parseFloat(c.env.PLATFORM_SURCHARGE || "0");
-  const { amount, description } = applySurcharge(fee, surcharge);
-  return handlePaidRoute(c, amount, description);
+  const { amount, unitType } = applySurcharge(fee, surcharge);
+  return handlePaidRoute(c, amount, unitType);
 });
 
 // ── Paid route handler ────────────────────────────────────────────────────
@@ -80,9 +80,9 @@ app.use("*", async (c, next) => {
 async function handlePaidRoute(
   c: Context<AppContext>,
   amount: string,
-  description: string,
+  unitType: string,
 ) {
-  const protectedMw = createProtectedRoute(amount, description);
+  const protectedMw = createProtectedRoute(amount, unitType);
 
   const result = await protectedMw(c, async () => {});
   if (result) return result;

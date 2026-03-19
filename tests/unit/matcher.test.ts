@@ -196,25 +196,25 @@ describe("findFee", () => {
 
 describe("applySurcharge", () => {
   it("applies 10% surcharge", () => {
-    const result = applySurcharge({ amount: "0.01", description: "Create a sandbox" }, 0.10);
+    const result = applySurcharge({ amount: "0.01", unitType: "sandbox-create", description: "Create a sandbox" }, 0.10);
     expect(result.amount).toBe("0.011000");
     expect(result.description).toContain("+10% platform fee");
   });
 
   it("applies 20% surcharge", () => {
-    const result = applySurcharge({ amount: "0.001", description: "Start" }, 0.20);
+    const result = applySurcharge({ amount: "0.001", unitType: "sandbox-lifecycle", description: "Start" }, 0.20);
     expect(result.amount).toBe("0.001200");
     expect(result.description).toContain("+20% platform fee");
   });
 
   it("returns original fee when surcharge is 0", () => {
-    const fee = { amount: "0.01", description: "Create" };
+    const fee = { amount: "0.01", unitType: "sandbox-create", description: "Create" };
     const result = applySurcharge(fee, 0);
     expect(result).toBe(fee);
   });
 
   it("returns original fee when surcharge is negative", () => {
-    const fee = { amount: "0.01", description: "Create" };
+    const fee = { amount: "0.01", unitType: "sandbox-create", description: "Create" };
     const result = applySurcharge(fee, -0.05);
     expect(result).toBe(fee);
   });

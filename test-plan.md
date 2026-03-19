@@ -1,6 +1,6 @@
 # Test Plan: cf-sandbox-mpp End-to-End Verification
 
-**API**: `cf-sandbox-mpp.cnvlabs.workers.dev`
+**API**: `daytona-sandbox-mpp.cnvlabs.workers.dev`
 **Tool**: `tempo request` (Tempo CLI)
 **Date**: 2026-03-19
 
@@ -15,7 +15,7 @@ tempo wallet login           # If not logged in
 
 Set the base URL:
 ```bash
-BASE=https://cf-sandbox-mpp.cnvlabs.workers.dev
+BASE=https://daytona-sandbox-mpp.cnvlabs.workers.dev
 ```
 
 ---
@@ -180,11 +180,10 @@ tempo request "$BASE/sandbox/$SID/toolbox/files?path=/"
 
 ```bash
 tempo request -X POST \
-  --json '{"path": "/home/daytona/test-dir", "mode": "755"}' \
-  $BASE/sandbox/$SID/toolbox/files/folder
+  "$BASE/sandbox/$SID/toolbox/files/folder?path=/home/daytona/test-dir&mode=755"
 ```
 
-**Expected**: 200. Payment: $0.0001.
+**Expected**: 200. Payment: $0.0001. Note: Daytona expects `path` and `mode` as query parameters, not in the JSON body.
 
 ### 4.3 Upload a file
 
@@ -323,42 +322,38 @@ tempo request --dry-run $BASE/sandbox
 
 ## Results Matrix
 
-Run date: 2026-03-19 | Sandbox ID: `3b4680fd-178a-4e82-8a70-3c8d36360dca`
-
 | # | Test | Endpoint | Expected Cost | Status |
 |---|------|----------|---------------|--------|
-| 1.1 | Health | `GET /__mpp/health` | Free | PASS |
-| 1.2 | Config | `GET /__mpp/config` | Free | PASS |
-| 1.3 | OpenAPI | `GET /openapi.json` | Free | PASS |
-| 2.1 | List sandboxes | `GET /sandbox` | $0.0001 | PASS |
-| 2.2 | Create sandbox | `POST /sandbox` | Dynamic | PASS |
-| 2.3 | Get sandbox | `GET /sandbox/:id` | $0.0001 | PASS |
-| 2.4 | List paginated | `GET /sandbox/paginated` | $0.0001 | PASS |
-| 2.5 | Toolbox proxy URL | `GET /sandbox/:id/toolbox-proxy-url` | $0.0001 | PASS |
-| 2.6 | Set auto-stop | `POST /sandbox/:id/autostop/:interval` | $0.0001 | PASS |
-| 3.1 | Execute command | `POST /sandbox/:id/toolbox/process/execute` | $0.0001 | PASS |
-| 3.2 | Create session | `POST /sandbox/:id/toolbox/process/sessions` | $0.0001 | FAIL (Daytona 404) |
-| 3.3 | List sessions | `GET /sandbox/:id/toolbox/process/sessions` | $0.0001 | SKIP |
-| 3.4 | Exec in session | `POST /sandbox/:id/toolbox/.../exec` | $0.0001 | SKIP |
-| 3.5 | Delete session | `DELETE /sandbox/:id/toolbox/.../sessions/:sid` | $0.0001 | SKIP |
-| 4.1 | List files | `GET /sandbox/:id/toolbox/files` | $0.0001 | PASS |
-| 4.2 | Create folder | `POST /sandbox/:id/toolbox/files/folder` | $0.0001 | FAIL (Daytona 400 — needs query params) |
-| 4.3 | Upload file | `POST /sandbox/:id/toolbox/files/upload` | $0.0001 | SKIP |
-| 4.4 | File info | `GET /sandbox/:id/toolbox/files/info` | $0.0001 | PASS |
-| 4.5 | Download file | `GET /sandbox/:id/toolbox/files/download` | $0.0001 | SKIP |
-| 4.6 | Search files | `GET /sandbox/:id/toolbox/files/search` | $0.0001 | PASS |
-| 4.7 | Delete file | `DELETE /sandbox/:id/toolbox/files` | $0.0001 | FAIL (Daytona 400) |
-| 4.8 | Project dir | `GET /sandbox/:id/toolbox/project-dir` | $0.0001 | PASS |
-| 4.9 | Home dir | `GET /sandbox/:id/toolbox/user-home-dir` | $0.0001 | PASS |
-| 5.1 | Git clone | `POST /sandbox/:id/toolbox/git/clone` | $0.001 | PASS |
-| 5.2 | List branches | `GET /sandbox/:id/toolbox/git/branches` | $0.0001 | PASS |
-| 5.3 | Git history | `GET /sandbox/:id/toolbox/git/history` | $0.0001 | PASS |
-| 6.1 | Stop sandbox | `POST /sandbox/:id/stop` | $0.001 | PASS |
-| 6.2 | Delete sandbox | `DELETE /sandbox/:id` | $0.001 | PASS |
-| 7.1 | Wrong method | `PUT /sandbox/:id/start` | N/A (404) | PASS |
-| 7.3 | Dry run | `GET /sandbox` | Preview only | SKIP |
-
-**Summary**: 22 PASS / 3 FAIL (upstream Daytona API issues) / 5 SKIP
+| 1.1 | Health | `GET /__mpp/health` | Free | |
+| 1.2 | Config | `GET /__mpp/config` | Free | |
+| 1.3 | OpenAPI | `GET /openapi.json` | Free | |
+| 2.1 | List sandboxes | `GET /sandbox` | $0.0001 | |
+| 2.2 | Create sandbox | `POST /sandbox` | Dynamic | |
+| 2.3 | Get sandbox | `GET /sandbox/:id` | $0.0001 | |
+| 2.4 | List paginated | `GET /sandbox/paginated` | $0.0001 | |
+| 2.5 | Toolbox proxy URL | `GET /sandbox/:id/toolbox-proxy-url` | $0.0001 | |
+| 2.6 | Set auto-stop | `POST /sandbox/:id/autostop/:interval` | $0.0001 | |
+| 3.1 | Execute command | `POST /sandbox/:id/toolbox/process/execute` | $0.0001 | |
+| 3.2 | Create session | `POST /sandbox/:id/toolbox/process/sessions` | $0.0001 | |
+| 3.3 | List sessions | `GET /sandbox/:id/toolbox/process/sessions` | $0.0001 | |
+| 3.4 | Exec in session | `POST /sandbox/:id/toolbox/.../exec` | $0.0001 | |
+| 3.5 | Delete session | `DELETE /sandbox/:id/toolbox/.../sessions/:sid` | $0.0001 | |
+| 4.1 | List files | `GET /sandbox/:id/toolbox/files` | $0.0001 | |
+| 4.2 | Create folder | `POST /sandbox/:id/toolbox/files/folder` | $0.0001 | |
+| 4.3 | Upload file | `POST /sandbox/:id/toolbox/files/upload` | $0.0001 | |
+| 4.4 | File info | `GET /sandbox/:id/toolbox/files/info` | $0.0001 | |
+| 4.5 | Download file | `GET /sandbox/:id/toolbox/files/download` | $0.0001 | |
+| 4.6 | Search files | `GET /sandbox/:id/toolbox/files/search` | $0.0001 | |
+| 4.7 | Delete file | `DELETE /sandbox/:id/toolbox/files` | $0.0001 | |
+| 4.8 | Project dir | `GET /sandbox/:id/toolbox/project-dir` | $0.0001 | |
+| 4.9 | Home dir | `GET /sandbox/:id/toolbox/user-home-dir` | $0.0001 | |
+| 5.1 | Git clone | `POST /sandbox/:id/toolbox/git/clone` | $0.001 | |
+| 5.2 | List branches | `GET /sandbox/:id/toolbox/git/branches` | $0.0001 | |
+| 5.3 | Git history | `GET /sandbox/:id/toolbox/git/history` | $0.0001 | |
+| 6.1 | Stop sandbox | `POST /sandbox/:id/stop` | $0.001 | |
+| 6.2 | Delete sandbox | `DELETE /sandbox/:id` | $0.001 | |
+| 7.1 | Wrong method | `PUT /sandbox/:id/start` | N/A (404) | |
+| 7.3 | Dry run | `GET /sandbox` | Preview only | |
 
 ---
 
@@ -368,7 +363,7 @@ Run date: 2026-03-19 | Sandbox ID: `3b4680fd-178a-4e82-8a70-3c8d36360dca`
 
 2. **Process sessions not available**: Daytona v0.153.0 returns 404 for `/toolbox/{id}/toolbox/process/sessions`. The process `execute` endpoint works fine — sessions may be a newer/different API.
 
-3. **Some file ops need query params**: `POST /toolbox/{id}/toolbox/files/folder` and `DELETE /toolbox/{id}/toolbox/files` return 400 with JSON body — Daytona expects `path` as a query parameter, not in the request body. This is a Daytona API convention issue, not a proxy bug.
+3. **Some file ops need query params**: Daytona expects `path` as a query parameter for file operations (e.g. `files/folder`, `files` DELETE), not in the JSON body. Test commands updated to reflect this.
 
 4. **All proxy routing works correctly**: Every tested endpoint was correctly routed, payment was auto-negotiated, and the toolbox path rewriting worked as expected.
 

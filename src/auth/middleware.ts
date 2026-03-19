@@ -1,5 +1,10 @@
 /**
  * Authentication middleware for MPP payment-gated routes.
+ *
+ * Uses Tempo session-based payments (pay-as-you-go):
+ * - First request opens a payment channel on-chain
+ * - Subsequent requests use cheap offchain vouchers
+ * - Channel closes to settle final balance
  */
 
 import { Context, Next } from "hono";
@@ -10,13 +15,14 @@ import { tempo as tempoMainnet, tempoModerato } from "viem/chains";
 import type { AppContext, Env } from "../env";
 
 /**
- * Creates middleware for a protected route that requires payment via Tempo.
- * Tempo handles idempotency — payment proofs are single-use and cannot be replayed.
+ * Creates middleware for a protected route using Tempo session payments.
+ * Sessions use payment channels: the first request opens a channel on-chain,
+ * and subsequent requests send offchain vouchers (no per-request gas cost).
  *
- * @param amount - Payment amount string (e.g. "0.01")
- * @param description - Human-readable payment description
+ * @param amount - Per-request payment amount string (e.g. "0.001")
+ * @param unitType - Unit being charged for (e.g. "sandbox-create", "api-request")
  */
-export function createProtectedRoute(amount: string, description: string) {
+export function createProtectedRoute(amount: string, unitType: string) {
   return async (c: Context<AppContext>, next: Next) => {
     const mppx = Mppx.create({
       methods: [
@@ -33,7 +39,7 @@ export function createProtectedRoute(amount: string, description: string) {
       secretKey: c.env.MPP_SECRET_KEY,
     });
 
-    return await payment(mppx.charge, { amount, description })(c, next);
+    return await payment(mppx.session, { amount, unitType })(c, next);
   };
 }
 
