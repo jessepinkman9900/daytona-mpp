@@ -1,4 +1,4 @@
-# Test Plan: cf-sandbox-mpp End-to-End Verification
+# Test Plan: daytona-sandbox-mpp End-to-End Verification
 
 **API**: `daytona-sandbox-mpp.cnvlabs.workers.dev`
 **Tool**: `tempo request` (Tempo CLI)

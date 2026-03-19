@@ -10,6 +10,7 @@ import { Hono, type Context } from "hono";
 import { createProtectedRoute } from "./auth/middleware";
 import { findFee, applySurcharge } from "./pricing/matcher";
 import { buildOpenApiSpec } from "./openapi";
+import { buildLlmsTxt } from "./llms-txt";
 import { proxyToDaytona } from "./proxy";
 import type { AppContext } from "./env";
 
@@ -17,7 +18,7 @@ const app = new Hono<AppContext>();
 
 // ── Public endpoints (no payment required) ────────────────────────────────
 
-const PUBLIC_PATHS = ["/__mpp/health", "/__mpp/config", "/openapi.json"];
+const PUBLIC_PATHS = ["/__mpp/health", "/__mpp/config", "/openapi.json", "/llms.txt", "/"];
 
 app.get("/__mpp/health", (c) =>
   c.json({
@@ -41,6 +42,16 @@ app.get("/__mpp/config", (c) =>
 );
 
 app.get("/openapi.json", (c) => c.json(buildOpenApiSpec(c)));
+
+app.get("/llms.txt", (c) => {
+  return c.text(buildLlmsTxt(c));
+});
+
+// Discovery-friendly root: redirect to the OpenAPI spec
+app.get("/", (c) => c.redirect("/openapi.json"));
+
+// Prevent /.well-known paths from hitting the payment middleware
+app.all("/.well-known/*", (c) => c.json({ error: "Not found" }, 404));
 
 // ── Payment-gated passthrough ─────────────────────────────────────────────
 

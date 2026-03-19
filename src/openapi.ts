@@ -18,11 +18,10 @@ function paymentInfo(price: string) {
     pricingMode: "fixed" as const,
     price,
     protocols: ["mpp"] as const,
-    authMode: "paid" as const,
   };
 }
 
-const FREE_AUTH = { "x-payment-info": { authMode: "none" as const } };
+
 
 function paidOp(
   operationId: string,
@@ -65,6 +64,13 @@ export function buildOpenApiSpec(c: Context<AppContext>) {
       ownershipProofs: [],
     },
     servers: [{ url: new URL(c.req.url).origin }],
+    tags: [
+      { name: "Public" },
+      { name: "Sandboxes" },
+      { name: "Toolbox – Process" },
+      { name: "Toolbox – Files" },
+      { name: "Toolbox – Git" },
+    ],
     paths: {
       // ── Public ────────────────────────────────────────────────────────
       "/openapi.json": {
@@ -72,8 +78,17 @@ export function buildOpenApiSpec(c: Context<AppContext>) {
           operationId: "getOpenApiSpec",
           summary: "OpenAPI specification",
           tags: ["Public"],
-          ...FREE_AUTH,
+          "x-payment-info": { pricingMode: "fixed" as const, price: "0", protocols: ["mpp"] as const },
           responses: { "200": { description: "This document" } },
+        },
+      },
+      "/llms.txt": {
+        get: {
+          operationId: "getLlmsTxt",
+          summary: "Machine-readable API documentation for AI agents (markdown)",
+          tags: ["Public"],
+          "x-payment-info": { pricingMode: "fixed" as const, price: "0", protocols: ["mpp"] as const },
+          responses: { "200": { description: "Markdown documentation", content: { "text/plain": { schema: { type: "string" } } } } },
         },
       },
       "/__mpp/health": {
@@ -81,7 +96,7 @@ export function buildOpenApiSpec(c: Context<AppContext>) {
           operationId: "getHealth",
           summary: "Health check",
           tags: ["Public"],
-          ...FREE_AUTH,
+          "x-payment-info": { pricingMode: "fixed" as const, price: "0", protocols: ["mpp"] as const },
           responses: {
             "200": {
               description: "Service is healthy",
@@ -108,7 +123,7 @@ export function buildOpenApiSpec(c: Context<AppContext>) {
           operationId: "getConfig",
           summary: "Proxy payment configuration",
           tags: ["Public"],
-          ...FREE_AUTH,
+          "x-payment-info": { pricingMode: "fixed" as const, price: "0", protocols: ["mpp"] as const },
           responses: { "200": { description: "Payment configuration" } },
         },
       },

@@ -1,0 +1,2216 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Sandbox API",
+    "version": "2.0.0",
+    "description": "MPP payment-gated passthrough proxy for the Daytona sandbox API. All endpoints except public ones require a USDC payment via the MPP protocol. Request bodies and query parameters are forwarded as-is to Daytona.",
+    "guidance": "This API proxies the full Daytona sandbox API with per-request payment gating. POST /sandbox to create a sandbox (pass Daytona's CreateSandbox schema directly). Use GET /sandbox to list, GET /sandbox/{id} to inspect, POST /sandbox/{id}/start or /stop to control lifecycle. Toolbox endpoints under /sandbox/{id}/toolbox/... let you execute commands, manage files, and perform git operations. All paid endpoints return 402 if payment is missing. The /openapi.json, /__mpp/health, and /__mpp/config endpoints are free."
+  },
+  "x-discovery": {
+    "ownershipProofs": []
+  },
+  "servers": [
+    {
+      "url": "https://daytona-sandbox-mpp.cnvlabs.workers.dev"
+    }
+  ],
+  "paths": {
+    "/openapi.json": {
+      "get": {
+        "operationId": "getOpenApiSpec",
+        "summary": "OpenAPI specification",
+        "tags": [
+          "Public"
+        ],
+        "x-payment-info": {
+          "authMode": "none"
+        },
+        "responses": {
+          "200": {
+            "description": "This document"
+          }
+        }
+      }
+    },
+    "/__mpp/health": {
+      "get": {
+        "operationId": "getHealth",
+        "summary": "Health check",
+        "tags": [
+          "Public"
+        ],
+        "x-payment-info": {
+          "authMode": "none"
+        },
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "proxy": {
+                      "type": "string"
+                    },
+                    "paymentMethod": {
+                      "type": "string"
+                    },
+                    "upstream": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/__mpp/config": {
+      "get": {
+        "operationId": "getConfig",
+        "summary": "Proxy payment configuration",
+        "tags": [
+          "Public"
+        ],
+        "x-payment-info": {
+          "authMode": "none"
+        },
+        "responses": {
+          "200": {
+            "description": "Payment configuration"
+          }
+        }
+      }
+    },
+    "/sandbox": {
+      "get": {
+        "operationId": "listSandboxes",
+        "summary": "List sandboxes",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "verbose",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "labels",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "description": "JSON-encoded label filter"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createSandbox",
+        "summary": "Create a sandbox",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.010000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "requestBody": {
+          "required": false,
+          "description": "Daytona CreateSandbox schema â€” passed through as-is. See https://www.daytona.io/docs/en/tools/api/",
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "description": "All fields are optional. Daytona uses sensible defaults.",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "snapshot": {
+                    "type": "string",
+                    "description": "Snapshot image reference"
+                  },
+                  "region": {
+                    "type": "string"
+                  },
+                  "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "autoStopInterval": {
+                    "type": "integer",
+                    "description": "Minutes before auto-stop"
+                  },
+                  "autoArchiveInterval": {
+                    "type": "integer",
+                    "description": "Minutes before auto-archive"
+                  },
+                  "autoDeleteInterval": {
+                    "type": "integer",
+                    "description": "Minutes before auto-delete"
+                  },
+                  "env": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  },
+                  "public": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/paginated": {
+      "get": {
+        "operationId": "listSandboxesPaginated",
+        "summary": "List sandboxes (paginated)",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/ssh-access/validate": {
+      "get": {
+        "operationId": "validateSshAccess",
+        "summary": "Validate SSH access token",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "token",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}": {
+      "get": {
+        "operationId": "getSandbox",
+        "summary": "Get sandbox details",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "verbose",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteSandbox",
+        "summary": "Delete a sandbox",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/start": {
+      "post": {
+        "operationId": "startSandbox",
+        "summary": "Start a sandbox",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/stop": {
+      "post": {
+        "operationId": "stopSandbox",
+        "summary": "Stop a sandbox",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/archive": {
+      "post": {
+        "operationId": "archiveSandbox",
+        "summary": "Archive a sandbox",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/resize": {
+      "post": {
+        "operationId": "resizeSandbox",
+        "summary": "Resize a sandbox",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.002000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "cpu": {
+                    "type": "number"
+                  },
+                  "memory": {
+                    "type": "number",
+                    "description": "GiB"
+                  },
+                  "disk": {
+                    "type": "number",
+                    "description": "GiB"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/backup": {
+      "post": {
+        "operationId": "backupSandbox",
+        "summary": "Create sandbox backup",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/recover": {
+      "post": {
+        "operationId": "recoverSandbox",
+        "summary": "Recover sandbox from error state",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/labels": {
+      "put": {
+        "operationId": "updateLabels",
+        "summary": "Update sandbox labels",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/public/{isPublic}": {
+      "post": {
+        "operationId": "setPublicStatus",
+        "summary": "Set sandbox public status",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "isPublic",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/autostop/{interval}": {
+      "post": {
+        "operationId": "setAutoStop",
+        "summary": "Set auto-stop interval",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Interval in minutes (0 to disable)"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/autoarchive/{interval}": {
+      "post": {
+        "operationId": "setAutoArchive",
+        "summary": "Set auto-archive interval",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Interval in minutes (0 to disable)"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/autodelete/{interval}": {
+      "post": {
+        "operationId": "setAutoDelete",
+        "summary": "Set auto-delete interval",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "interval",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "description": "Interval in minutes (0 to disable)"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/ssh-access": {
+      "post": {
+        "operationId": "createSshAccess",
+        "summary": "Create SSH access token",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "expiresInMinutes",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 60
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "revokeSshAccess",
+        "summary": "Revoke SSH access",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "token",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox-proxy-url": {
+      "get": {
+        "operationId": "getToolboxProxyUrl",
+        "summary": "Get toolbox proxy URL",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/build-logs-url": {
+      "get": {
+        "operationId": "getBuildLogsUrl",
+        "summary": "Get build logs URL",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/ports/{port}/preview-url": {
+      "get": {
+        "operationId": "getPortPreviewUrl",
+        "summary": "Get port preview URL",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "port",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/ports/{port}/signed-preview-url": {
+      "get": {
+        "operationId": "getSignedPreviewUrl",
+        "summary": "Get signed port preview URL",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "port",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "expiresInSeconds",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 60
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/ports/{port}/signed-preview-url/{token}/expire": {
+      "post": {
+        "operationId": "expireSignedPreviewUrl",
+        "summary": "Expire signed preview URL token",
+        "tags": [
+          "Sandboxes"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "port",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "token",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/process/execute": {
+      "post": {
+        "operationId": "executeProcess",
+        "summary": "Execute a command in sandbox",
+        "tags": [
+          "Toolbox â€“ Process"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "command": {
+                    "type": "string"
+                  },
+                  "cwd": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "command"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/process/sessions": {
+      "get": {
+        "operationId": "listProcessSessions",
+        "summary": "List process sessions",
+        "tags": [
+          "Toolbox â€“ Process"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createProcessSession",
+        "summary": "Create process session",
+        "tags": [
+          "Toolbox â€“ Process"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/process/sessions/{sessionId}": {
+      "delete": {
+        "operationId": "deleteProcessSession",
+        "summary": "Kill a process session",
+        "tags": [
+          "Toolbox â€“ Process"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/process/sessions/{sessionId}/exec": {
+      "post": {
+        "operationId": "execInSession",
+        "summary": "Execute command in a session",
+        "tags": [
+          "Toolbox â€“ Process"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          },
+          {
+            "name": "sessionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files": {
+      "get": {
+        "operationId": "listFiles",
+        "summary": "List files",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteFile",
+        "summary": "Delete a file",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/upload": {
+      "post": {
+        "operationId": "uploadFile",
+        "summary": "Upload a file",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/bulk-upload": {
+      "post": {
+        "operationId": "bulkUploadFiles",
+        "summary": "Upload multiple files",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/download": {
+      "get": {
+        "operationId": "downloadFile",
+        "summary": "Download a file",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/bulk-download": {
+      "post": {
+        "operationId": "bulkDownloadFiles",
+        "summary": "Download multiple files",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/folder": {
+      "post": {
+        "operationId": "createFolder",
+        "summary": "Create a folder",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/move": {
+      "post": {
+        "operationId": "moveFile",
+        "summary": "Move or rename a file",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/info": {
+      "get": {
+        "operationId": "getFileInfo",
+        "summary": "Get file info",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/search": {
+      "get": {
+        "operationId": "searchFiles",
+        "summary": "Search files by name",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/find": {
+      "get": {
+        "operationId": "findInFiles",
+        "summary": "Search file contents",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/replace": {
+      "post": {
+        "operationId": "replaceInFiles",
+        "summary": "Find and replace in files",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/files/permissions": {
+      "post": {
+        "operationId": "setFilePermissions",
+        "summary": "Set file permissions",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/project-dir": {
+      "get": {
+        "operationId": "getProjectDir",
+        "summary": "Get project directory",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/user-home-dir": {
+      "get": {
+        "operationId": "getUserHomeDir",
+        "summary": "Get user home directory",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/work-dir": {
+      "get": {
+        "operationId": "getWorkDir",
+        "summary": "Get work directory",
+        "tags": [
+          "Toolbox â€“ Files"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/clone": {
+      "post": {
+        "operationId": "gitClone",
+        "summary": "Clone a git repository",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.001000",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/add": {
+      "post": {
+        "operationId": "gitAdd",
+        "summary": "Stage files for commit",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/commit": {
+      "post": {
+        "operationId": "gitCommit",
+        "summary": "Commit changes",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/push": {
+      "post": {
+        "operationId": "gitPush",
+        "summary": "Push changes",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/pull": {
+      "post": {
+        "operationId": "gitPull",
+        "summary": "Pull changes",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/branches": {
+      "get": {
+        "operationId": "listBranches",
+        "summary": "List git branches",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "post": {
+        "operationId": "createBranch",
+        "summary": "Create a git branch",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteBranch",
+        "summary": "Delete a git branch",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    },
+    "/sandbox/{id}/toolbox/git/history": {
+      "get": {
+        "operationId": "gitHistory",
+        "summary": "Get commit history",
+        "tags": [
+          "Toolbox â€“ Git"
+        ],
+        "x-payment-info": {
+          "pricingMode": "fixed",
+          "price": "0.000100",
+          "protocols": [
+            "mpp"
+          ],
+          "authMode": "paid"
+        },
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Sandbox ID or name"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "402": {
+            "description": "Payment Required"
+          }
+        }
+      }
+    }
+  }
+}
