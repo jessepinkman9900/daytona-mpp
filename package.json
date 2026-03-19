@@ -1,0 +1,33 @@
+{
+  "name": "cf-sandbox-mpp",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "MPP payment-gated proxy for Daytona sandbox API with usage-based billing",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy --minify",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:unit": "vitest run tests/unit",
+    "test:integration": "vitest run tests/integration",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "lint": "npm run typecheck && npm run format:check"
+  },
+  "dependencies": {
+    "hono": "4.11.1",
+    "mppx": "^0.4.4"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.8.0",
+    "@cloudflare/workers-types": "^4.20250310.0",
+    "@types/node": "^22.0.0",
+    "prettier": "3.7.4",
+    "typescript": "^5.7.0",
+    "viem": "^2.47.4",
+    "vitest": "^3.0.0",
+    "wrangler": "^4.0.0"
+  }
+}

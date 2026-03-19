@@ -1,0 +1,35 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "daytona-sandbox-mpp",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-10-08",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    // Daytona upstream
+    "DAYTONA_API_URL": "https://app.daytona.io/api",
+
+    // Tempo payment settings
+    "PAY_TO": "0x9758B5e6344aF311FDE8054a4C213f80Ffb14489",
+    "TEMPO_TESTNET": false,
+    // USDC on Tempo mainnet. For local dev, override in .dev.vars:
+    //   TEMPO_TESTNET=true
+    //   PAYMENT_CURRENCY=0x20c0000000000000000000000000000000000000  (pathUSD testnet)
+    "PAYMENT_CURRENCY": "0x20c000000000000000000000b9537d11c60e8b50",
+
+    // Platform surcharge as a decimal: 0.10 = 10% on top of base fees
+    "PLATFORM_SURCHARGE": "0.10"
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["SandboxBudget"]
+    },
+    {
+      "tag": "v2",
+      "deleted_classes": ["SandboxBudget"]
+    }
+  ],
+  "upload_source_maps": true
+}

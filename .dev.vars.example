@@ -1,0 +1,8 @@
+# Secrets — copy to .dev.vars and fill in real values
+# Generate secrets:  openssl rand -hex 32
+
+MPP_SECRET_KEY=your-mpp-secret-here
+DAYTONA_API_KEY=your-daytona-api-key-here
+
+# Optional: authenticated Tempo RPC endpoint for mainnet
+# TEMPO_RPC_URL=https://user:pass@rpc.mainnet.tempo.xyz/

@@ -1,0 +1,15 @@
+# Claude Code ctags index
+.claude/tags
+
+# Dependencies
+node_modules/
+
+# Build
+dist/
+.wrangler/
+
+# Secrets
+.dev.vars
+
+# OS
+.DS_Store
